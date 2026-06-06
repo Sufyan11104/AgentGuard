@@ -1,0 +1,35 @@
+{
+  "name": "agentguard",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Defensive security and evaluation toolkit for testing AI agents and LLM applications.",
+  "license": "MIT",
+  "type": "module",
+  "packageManager": "pnpm@10.18.1",
+  "engines": {
+    "node": ">=20.11.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "ci": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build",
+    "db:down": "docker compose down",
+    "db:logs": "docker compose logs -f postgres",
+    "db:up": "docker compose up -d postgres",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint . && turbo run lint",
+    "test": "turbo run test",
+    "typecheck": "tsc --noEmit -p tsconfig.json && turbo run typecheck"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.6.2",
+    "turbo": "^2.6.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.3",
+    "vitest": "^3.2.4"
+  }
+}
