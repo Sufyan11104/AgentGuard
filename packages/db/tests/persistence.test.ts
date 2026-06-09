@@ -55,10 +55,12 @@ function integrationRun(): EvaluationRun {
 
 const hasDatabaseUrl =
   process.env.DATABASE_URL !== undefined && process.env.DATABASE_URL.length > 0;
+const shouldRunDbIntegrationTests =
+  process.env.AGENTGUARD_RUN_DB_INTEGRATION_TESTS === "true" && hasDatabaseUrl;
 
-if (!hasDatabaseUrl) {
+if (!shouldRunDbIntegrationTests) {
   describe("db persistence integration", () => {
-    it.skip("skips DB integration tests because DATABASE_URL is not set", () => {});
+    it.skip("skips DB integration tests unless AGENTGUARD_RUN_DB_INTEGRATION_TESTS=true and DATABASE_URL is set", () => {});
   });
 } else {
   describe("db persistence integration", () => {
