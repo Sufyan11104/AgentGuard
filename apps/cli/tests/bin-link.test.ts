@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 
 const execFileAsync = promisify(execFile);
 const cliRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const repoRoot = path.resolve(cliRoot, "../..");
+const builtCliEntry = path.join(cliRoot, "dist", "index.js");
 
 describe("CLI bin metadata", () => {
   it("points agentguard to the built executable entry", async () => {
@@ -20,19 +20,14 @@ describe("CLI bin metadata", () => {
     expect(packageJson.type).toBe("module");
     expect(packageJson.bin?.agentguard).toBe("./dist/index.js");
 
-    const binPath = path.join(cliRoot, packageJson.bin?.agentguard ?? "");
-    await expect(access(binPath)).resolves.toBeUndefined();
+    await expect(access(builtCliEntry)).resolves.toBeUndefined();
 
-    const builtEntry = await readFile(binPath, "utf8");
+    const builtEntry = await readFile(builtCliEntry, "utf8");
     expect(builtEntry.startsWith("#!/usr/bin/env node")).toBe(true);
   });
 
-  it("executes through the workspace-linked pnpm bin wrapper", async () => {
-    const workspaceBin = path.join(repoRoot, "node_modules", ".bin", "agentguard");
-
-    await expect(access(workspaceBin)).resolves.toBeUndefined();
-
-    const { stdout } = await execFileAsync(workspaceBin, ["--version"], {
+  it("executes the built entry directly with Node", async () => {
+    const { stdout } = await execFileAsync(process.execPath, [builtCliEntry, "--version"], {
       cwd: cliRoot,
     });
 

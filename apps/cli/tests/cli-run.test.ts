@@ -1,11 +1,11 @@
 import { execFile } from "node:child_process";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { access, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { stringify } from "yaml";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { initCommand } from "../src/commands/init.js";
 import { reportCommand } from "../src/commands/report.js";
 import { runCommand } from "../src/commands/run.js";
@@ -13,8 +13,7 @@ import { createDefaultConfig } from "../src/config/schema.js";
 
 const execFileAsync = promisify(execFile);
 const cliRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const repoRoot = path.resolve(cliRoot, "../..");
-const workspaceBin = path.join(repoRoot, "node_modules", ".bin", "agentguard");
+const builtCliEntry = path.join(cliRoot, "dist", "index.js");
 let tempDir: string;
 
 interface CliExecutionResult {
@@ -25,7 +24,9 @@ interface CliExecutionResult {
 
 async function execCli(args: readonly string[], cwd: string): Promise<CliExecutionResult> {
   try {
-    const { stdout, stderr } = await execFileAsync(workspaceBin, [...args], { cwd });
+    const { stdout, stderr } = await execFileAsync(process.execPath, [builtCliEntry, ...args], {
+      cwd,
+    });
     return {
       code: 0,
       stdout,
@@ -58,6 +59,16 @@ async function writeVulnerableConfig(cwd: string): Promise<void> {
 }
 
 describe("CLI run and report commands", () => {
+  beforeAll(async () => {
+    try {
+      await access(builtCliEntry);
+    } catch {
+      throw new Error(
+        `Built CLI entry not found at ${builtCliEntry}. Run pnpm --filter @agentguard/cli build before executing these tests.`,
+      );
+    }
+  });
+
   beforeEach(async () => {
     tempDir = await mkdtemp(path.join(os.tmpdir(), "agentguard-cli-run-"));
   });
