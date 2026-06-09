@@ -25,5 +25,8 @@
   "dependencies": {
     "@agentguard/core": "workspace:*",
     "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@agentguard/test-packs": "workspace:*"
   }
 }

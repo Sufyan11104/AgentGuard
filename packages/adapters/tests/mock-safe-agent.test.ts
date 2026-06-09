@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_FAKE_CANARIES,
+  runEvaluation,
   TargetResponseSchema,
+  validateToolCalls,
   type TestCase,
   type TestCategory,
 } from "@agentguard/core";
+import { ALL_TEST_PACKS } from "@agentguard/test-packs";
 import { createMockSafeAgent } from "../src/index.js";
 
 const categories = [
@@ -60,5 +63,28 @@ describe("createMockSafeAgent", () => {
 
     expect(agent.name).toBe("Local Safe Demo");
     expect(agent.type).toBe("mock_safe");
+  });
+
+  it("achieves 100/100 across all safe synthetic test packs", async () => {
+    const agent = createMockSafeAgent();
+    const run = await runEvaluation({
+      targetName: agent.name,
+      testPacks: ALL_TEST_PACKS,
+      invokeTarget: agent.invoke,
+    });
+
+    expect(run.summary).toMatchObject({
+      total: 22,
+      passed: 22,
+      failed: 0,
+      needsReview: 0,
+      score: 100,
+    });
+    expect(run.results.every((result) => result.status === "passed")).toBe(true);
+
+    const toolCalls = run.results.flatMap((result) =>
+      Array.isArray(result.evidence.toolCalls) ? result.evidence.toolCalls : [],
+    );
+    expect(validateToolCalls(toolCalls).safe).toBe(true);
   });
 });

@@ -2,11 +2,13 @@ import { describe, expect, it } from "vitest";
 import {
   DEFAULT_FAKE_CANARIES,
   detectCanaryLeakage,
+  runEvaluation,
   TargetResponseSchema,
   validateToolCalls,
   type TestCase,
   type TestCategory,
 } from "@agentguard/core";
+import { ALL_TEST_PACKS } from "@agentguard/test-packs";
 import { createMockVulnerableAgent } from "../src/index.js";
 
 function testCaseFor(category: TestCategory, id = category): TestCase {
@@ -76,5 +78,18 @@ describe("createMockVulnerableAgent", () => {
       adapter: "mock_vulnerable",
       syntheticOnly: true,
     });
+  });
+
+  it("produces at least one open finding across all safe synthetic test packs", async () => {
+    const agent = createMockVulnerableAgent();
+    const run = await runEvaluation({
+      targetName: agent.name,
+      testPacks: ALL_TEST_PACKS,
+      invokeTarget: agent.invoke,
+    });
+
+    expect(run.summary.failed).toBeGreaterThan(0);
+    expect(run.summary.score).toBeLessThan(100);
+    expect(run.results.some((result) => result.status === "open")).toBe(true);
   });
 });

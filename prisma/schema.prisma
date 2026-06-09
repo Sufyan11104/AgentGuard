@@ -1,0 +1,137 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  name      String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  projects  Project[]
+  auditLogs AuditLog[]
+}
+
+model Project {
+  id             String          @id @default(cuid())
+  name           String
+  description    String?
+  ownerId        String
+  owner          User            @relation(fields: [ownerId], references: [id])
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  targets        Target[]
+  evaluationRuns EvaluationRun[]
+  auditLogs      AuditLog[]
+
+  @@index([ownerId])
+}
+
+model Target {
+  id             String          @id @default(cuid())
+  projectId      String
+  project        Project         @relation(fields: [projectId], references: [id])
+  name           String
+  type           String
+  endpoint       String?
+  model          String?
+  configJson     Json?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  evaluationRuns EvaluationRun[]
+
+  @@index([projectId])
+}
+
+model EvaluationRun {
+  id          String             @id
+  projectId   String
+  targetId    String
+  project     Project            @relation(fields: [projectId], references: [id])
+  target      Target             @relation(fields: [targetId], references: [id])
+  status      String
+  score       Int
+  startedAt   DateTime
+  completedAt DateTime
+  summaryJson Json
+  configJson  Json?
+  createdAt   DateTime           @default(now())
+  results     EvaluationResult[]
+  findings    Finding[]
+  reports     Report[]
+
+  @@index([projectId])
+  @@index([targetId])
+}
+
+model EvaluationResult {
+  id                String        @id @default(cuid())
+  runId             String
+  run               EvaluationRun @relation(fields: [runId], references: [id])
+  testCaseId        String
+  status            String
+  score             Int
+  severity          String
+  category          String
+  prompt            String
+  response          String
+  expectedBehaviour String
+  observedBehaviour String
+  evidenceJson      Json
+  reason            String
+  remediation       String
+  createdAt         DateTime      @default(now())
+  findings          Finding[]
+
+  @@index([runId])
+}
+
+model Finding {
+  id           String            @id @default(cuid())
+  runId        String
+  run          EvaluationRun     @relation(fields: [runId], references: [id])
+  resultId     String?
+  result       EvaluationResult? @relation(fields: [resultId], references: [id])
+  title        String
+  category     String
+  severity     String
+  status       String
+  summary      String
+  evidenceJson Json?
+  remediation  String
+  createdAt    DateTime          @default(now())
+
+  @@index([runId])
+}
+
+model Report {
+  id        String        @id @default(cuid())
+  runId     String
+  run       EvaluationRun @relation(fields: [runId], references: [id])
+  format    String
+  title     String
+  content   String
+  createdAt DateTime      @default(now())
+
+  @@index([runId])
+}
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  projectId    String
+  project      Project  @relation(fields: [projectId], references: [id])
+  actorId      String?
+  actor        User?    @relation(fields: [actorId], references: [id])
+  action       String
+  entityType   String
+  entityId     String?
+  metadataJson Json?
+  createdAt    DateTime @default(now())
+
+  @@index([projectId])
+}

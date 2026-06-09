@@ -12,9 +12,13 @@
   },
   "scripts": {
     "build": "turbo run build",
-    "ci": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build",
+    "ci": "pnpm db:generate && pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build",
     "db:down": "docker compose down",
+    "db:generate": "prisma generate",
     "db:logs": "docker compose logs -f postgres",
+    "db:push": "prisma db push",
+    "db:seed": "pnpm build && tsx prisma/seed.ts",
+    "db:studio": "prisma studio",
     "db:up": "docker compose up -d postgres",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -23,11 +27,18 @@
     "typecheck": "tsc --noEmit -p tsconfig.json && turbo run typecheck"
   },
   "devDependencies": {
+    "@agentguard/adapters": "workspace:*",
+    "@agentguard/cli": "workspace:*",
+    "@agentguard/db": "workspace:*",
+    "@agentguard/test-packs": "workspace:*",
     "@eslint/js": "^9.39.1",
+    "@prisma/client": "^6.19.0",
     "eslint": "^9.39.1",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.6.2",
+    "prisma": "^6.19.0",
     "turbo": "^2.6.1",
+    "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.3",
     "vitest": "^3.2.4"

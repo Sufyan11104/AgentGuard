@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import process from "node:process";
-import { pathToFileURL } from "node:url";
+import { realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { Command } from "commander";
 import { initCommand } from "./commands/init.js";
 import { listPacksCommand } from "./commands/list-packs.js";
@@ -53,7 +54,11 @@ export function createProgram(): Command {
     .command("run")
     .description("Run selected test packs against the configured target.")
     .option("-c, --config <path>", "Config file path.")
-    .action(async (options: { config?: string }) => {
+    .option(
+      "--no-fail-on-threshold",
+      "Print threshold failures but exit with code 0. Useful for demos with intentionally vulnerable targets.",
+    )
+    .action(async (options: { config?: string; failOnThreshold?: boolean }) => {
       const result = await runCommand({
         cwd: process.cwd(),
         configPath: options.config,
@@ -64,7 +69,11 @@ export function createProgram(): Command {
         console.error(
           `Score ${result.run.summary.score} is below failBelow threshold ${result.config.scoring.failBelow}.`,
         );
-        process.exitCode = 1;
+        if (options.failOnThreshold === false) {
+          console.error("Threshold failure ignored because --no-fail-on-threshold was used.");
+        } else {
+          process.exitCode = 1;
+        }
       }
     });
 
@@ -104,6 +113,18 @@ export async function main(argv = process.argv): Promise<void> {
   }
 }
 
-if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
+function isDirectlyExecuted(): boolean {
+  if (process.argv[1] === undefined) {
+    return false;
+  }
+
+  try {
+    return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    return false;
+  }
+}
+
+if (isDirectlyExecuted()) {
   await main();
 }

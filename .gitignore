@@ -7,6 +7,7 @@ build/
 .next/
 out/
 .turbo/
+*.tsbuildinfo
 
 # Test output
 coverage/
@@ -20,6 +21,7 @@ test-results/
 
 # AgentGuard local output
 .agentguard/
+agentguard.config.yaml
 
 # Logs
 *.log

@@ -16,7 +16,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "lint": "eslint .",
-    "test": "vitest run tests --maxWorkers=1",
+    "test": "pnpm run build && vitest run tests --maxWorkers=1",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
